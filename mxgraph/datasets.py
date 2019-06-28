@@ -605,3 +605,7 @@ class LoadData(object):
         print('------------------------------------------------------------------------------',
               file=stream)
         return stream.getvalue()
+
+
+if __name__ == '__main__':
+    LoadData('ml-100k', use_inductive=False, test_ratio=0.2, val_ratio=0.1, seed=100)

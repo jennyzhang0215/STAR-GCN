@@ -528,7 +528,6 @@ class CSRMat(object):
                 col_indices = np.array([col_indices], dtype=np.int32)
             else:
                 col_indices = np.ascontiguousarray(col_indices, dtype=np.int32)
-        print("col_indices", col_indices.size)
         print("self.col_ids", self.col_ids.size)
         print("ind_ptr", self.ind_ptr.size-1)
         dst_end_points, dst_values, dst_ind_ptr, dst_row_ids, dst_col_ids\

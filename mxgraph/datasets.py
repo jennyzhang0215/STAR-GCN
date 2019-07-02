@@ -155,12 +155,13 @@ class LoadData(object):
             self._inductive_key = inductive_key
             self._inductive_node_frac = inductive_node_frac
             self._inductive_edge_frac = inductive_edge_frac
-            if self._inductive_key == "item":
-                all_node_ids = self.graph.node_ids[self.name_item]
-            elif self._inductive_key == "user":
-                all_node_ids = self.graph.node_ids[self.name_user]
+            if inductive_key == "item":
+                self._inductive_key = self.name_item
+            elif inductive_key == "user":
+                self._inductive_key = self.name_user
             else:
                 raise NotImplementedError
+            all_node_ids = self.graph.node_ids[self._inductive_key]
             train_val_ids, self._inductive_test_ids, self._test_data = \
                 self._gen_inductive_data(all_node_ids)
             self._inductive_train_ids, self._inductive_valid_ids, self._valid_data = \

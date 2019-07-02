@@ -12,7 +12,7 @@ setuptools.setup(
         os.path.abspath(__file__)), 'README.md')).read(),
     license='MIT',
     url='https://github.com/jennyzhang0215/STAR-GCN',
-    install_requires=['numpy', 'scipy', 'matplotlib', 'six', 'pyyaml', 'sklearn', 'pandas',
+    install_requires=['numpy', 'scipy', 'matplotlib', 'six', 'pyyaml', 'sklearn', 'pandas', 'logging',
                       'warnings', 'spacy', 'mxnet', 'gluonnlp'],
     classifiers=['Development Status :: 2 - Pre-Alpha',
                  'Intended Audience :: Science/Research',

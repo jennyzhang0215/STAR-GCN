@@ -20,8 +20,8 @@ MODEL:
 GRAPH_SAMPLER:
   NUM_NEIGHBORS: -1
 FEA:
-  MID_MAP: 32
-  UNITS: 32
+  MID_MAP: 0
+  UNITS: 0
 EMBED:
   UNITS: 32
   MASK_PROP: 0.1
@@ -33,7 +33,7 @@ GCN:
   AGG:
     NORM_SYMM: true
     UNITS: [250]
-    ACCUM: stack
+    ACCUM: sum
   OUT:
     UNITS: [75]
 GEN_RATING:

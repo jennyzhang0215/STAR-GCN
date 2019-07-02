@@ -36,6 +36,7 @@ def config():
     cfg.DATASET = edict()
     cfg.DATASET.NAME = args.dataset  # e.g. ml-100k
     cfg.DATASET.VALID_RATIO = 0.1
+    cfg.DATASET.TEST_RATIO = 0.2
     cfg.DATASET.IS_INDUCTIVE = args.inductive
     cfg.DATASET.INDUCTIVE_KEY = "item" ## ["item" / "name"]
     cfg.DATASET.INDUCTIVE_NODE_FRAC = 20 ### choice: 20
@@ -114,9 +115,6 @@ def config():
         os.makedirs(args.save_dir)
     args.save_id = save_cfg_dir(args.save_dir, source=cfg)
 
-    ### Some Default flag
-    cfg.DATASET.USE_INPUT_TEST_SET = True
-    cfg.DATASET.TEST_RATIO = 0.2
     return cfg, args
 
 
@@ -215,8 +213,7 @@ class Net(nn.Block):
                                 source_keys = [name_user, name_item] ### For HeterGCN without link prediction training
                             else:
                                 source_keys = all_graph.meta_graph.keys()
-                            print("source_keys", source_keys)
-                            #out_act = None if i == len(_GCN.AGG.UNITS) - 1 else _MODEL.ACTIVATION
+
                             encoder.add(HeterGCNLayer(meta_graph=all_graph.meta_graph,
                                                       multi_link_structure=all_graph.get_multi_link_structure(),
                                                       dropout_rate=_GCN.DROPOUT,
@@ -558,7 +555,6 @@ def train(seed):
     logging.info(data_iter)
     ### build the net
     possible_rating_values = data_iter.possible_rating_values
-    nd_possible_rating_values = mx.nd.array(possible_rating_values, ctx=args.ctx, dtype=np.float32)
     net = Net(all_graph=all_graph, nratings=possible_rating_values.size,
               name_user=dataset.name_user, name_item=dataset.name_item)
     net.initialize(init=mx.init.Xavier(factor_type='in'), ctx=args.ctx)
@@ -569,9 +565,9 @@ def train(seed):
                             {'learning_rate': _TRAIN.LR, 'wd': _TRAIN.WD})
     ### prepare the logger
     train_loss_logger = MetricLogger(['iter', 'loss'] + sum([['rmse{}'.format(i),
-                                                      'rating_loss{}'.format(i),
-                                                      'recon_loss{}'.format(i)] for i in range(_MODEL.NBLOCKS)],
-                                                    []),
+                                                              'rating_loss{}'.format(i),
+                                                              'recon_loss{}'.format(i)]
+                                                             for i in range(_MODEL.NBLOCKS)], []),
                                      ['%d', '%.4f'] + ['%.4f', '%.4f', '%.4f'] * _MODEL.NBLOCKS,
                                      os.path.join(args.save_dir, 'train_loss%d.csv' % args.save_id))
     valid_loss_logger = MetricLogger(['iter'] + ['rmse{}'.format(i) for i in range(_MODEL.NBLOCKS)],
@@ -581,13 +577,12 @@ def train(seed):
                                     ['%d'] + ['%.4f'] * _MODEL.NBLOCKS,
                                     os.path.join(args.save_dir, 'test_loss%d.csv' % args.save_id))
     ### initialize the iterator
-    rating_sampler = data_iter.rating_sampler(batch_size=_TRAIN.RATING_BATCH_SIZE,
-                                              segment='train')
+    rating_sampler = data_iter.rating_sampler(batch_size=_TRAIN.RATING_BATCH_SIZE, segment='train')
     recon_sampler = data_iter.recon_nodes_sampler(batch_size=_TRAIN.RECON_BATCH_SIZE, segment='train')
     graph_sampler_args = gen_graph_sampler_args(all_graph.meta_graph)
     rating_mean = data_iter._train_ratings.mean()
     rating_std = data_iter._train_ratings.std()
-    ### declare the loss information
+
     best_valid_rmse = np.inf
     best_test_rmse_l = None
     no_better_valid = 0
@@ -608,7 +603,7 @@ def train(seed):
         nd_gt_ratings = mx.nd.array(gt_ratings, ctx=args.ctx, dtype=np.float32)
 
         iter_graph = data_iter.train_graph
-        ## remove the batch rating pair and link prediction pair (optional)
+        ## remove the batch rating pair (optional)
         if rating_node_pairs.shape[1] < data_iter._train_node_pairs.shape[1] and _MODEL.REMOVE_RATING:
             if iter_idx == 1:
                 logging.info("Removing training edges within the batch...")
@@ -705,7 +700,8 @@ def train(seed):
                                        data_iter=data_iter, segment='test')
                 best_test_rmse_l = test_rmse_l
                 test_loss_logger.log(**dict([('iter', iter_idx)] +
-                                            [('rmse{}'.format(i), ele_rmse) for i, ele_rmse in enumerate(test_rmse_l)]))
+                                            [('rmse{}'.format(i), ele_rmse)
+                                             for i, ele_rmse in enumerate(test_rmse_l)]))
                 logging_str += ', ' + ', '.join(["Test RMSE{}={:.4f}".format(i, ele_rmse)
                                                  for i, ele_rmse in enumerate(test_rmse_l)])
             else:

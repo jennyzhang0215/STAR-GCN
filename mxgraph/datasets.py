@@ -161,10 +161,10 @@ class LoadData(object):
             else:
                 raise NotImplementedError
             all_node_ids = self.graph.node_ids[self._inductive_key]
-            print("all_node_ids", all_node_ids.size, all_node_ids)
+            #print("all_node_ids", all_node_ids.size, all_node_ids)
             train_val_ids, self._inductive_test_ids, self._test_data = \
                 self._gen_inductive_data(all_node_ids)
-            print("train_val_ids", train_val_ids.size, train_val_ids)
+            #print("train_val_ids", train_val_ids.size, train_val_ids)
             self._inductive_train_ids, self._inductive_valid_ids, self._valid_data = \
                 self._gen_inductive_data(train_val_ids)
             assert np.unique(self._inductive_train_ids).size + np.unique(self._inductive_valid_ids).size + \
@@ -172,10 +172,8 @@ class LoadData(object):
 
 
     def _gen_inductive_data(self, node_ids):
-        total_num_nodes = node_ids.shape[0]
-        shuffled_idx = np.random.permutation(total_num_nodes).astype(np.int32)
-        test_num = int(np.ceil(total_num_nodes / 100.0 * self._inductive_node_frac))
-        shuffled_nodes = node_ids[shuffled_idx]
+        shuffled_nodes = np.random.permutation(node_ids)
+        test_num = int(np.ceil(node_ids.size / 100.0 * self._inductive_node_frac))
         count_test_id = 0
         test_ids = []
         train_ids = []
@@ -204,6 +202,7 @@ class LoadData(object):
                 test_rating_pairs_l.append(node_pairs[:, test_node_pair_idx])
             if count_test_id == test_num:
                 break
+        assert idx+1 < node_ids.size
         test_ids = np.array(test_ids, dtype=np.int32)
         train_ids = np.concatenate((np.array(train_ids, dtype=np.int32), shuffled_idx[idx+1: ]))
         assert shuffled_idx.size == train_ids.size + test_ids.size
@@ -212,7 +211,6 @@ class LoadData(object):
                      self._graph.fetch_edges_by_id(src_key=self.name_user,
                                                    dst_key=self.name_item,
                                                    node_pair_ids=test_rating_pairs))
-        print("test_data", test_data)
         return train_ids, test_ids, test_data
 
     @property

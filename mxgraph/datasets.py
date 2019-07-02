@@ -152,11 +152,15 @@ class LoadData(object):
             valid_values = test_rating_info['rating'].values.astype(np.float32)
             self._valid_data = (valid_node_pairs, valid_values)
         else:
-            assert inductive_key in ["user", "item"]
             self._inductive_key = inductive_key
             self._inductive_node_frac = inductive_node_frac
             self._inductive_edge_frac = inductive_edge_frac
-            all_node_ids = self.graph.node_ids[self._inductive_key]
+            if self._inductive_key == "item":
+                all_node_ids = self.graph.node_ids[self.name_item]
+            elif self._inductive_key == "user":
+                all_node_ids = self.graph.node_ids[self.name_user]
+            else:
+                raise NotImplementedError
             train_val_ids, self._inductive_test_ids, self._test_data = \
                 self._gen_inductive_data(all_node_ids)
             self._inductive_train_ids, self._inductive_valid_ids, self._valid_data = \

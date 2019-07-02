@@ -69,6 +69,22 @@ def parse_ctx(ctx_args):
     return ctx
 
 
+def copy_to_ctx(data, ctx, dtype=None):
+    if isinstance(data, (list, tuple)):
+        if dtype is None:
+            dtype = data[0].dtype
+        return [nd.array(ele, dtype=dtype, ctx=ctx) for ele in data]
+    elif isinstance(data, dict):
+        if dtype is None:
+            return {k: copy_to_ctx(v, ctx) for k, v in data.items()}
+        else:
+            return {k: copy_to_ctx(v, ctx, dtype) for k, v in data.items()}
+    else:
+        if dtype is None:
+            dtype = data.dtype
+        return nd.array(data, dtype=dtype, ctx=ctx)
+
+
 def gluon_total_param_num(net):
     return sum([np.prod(v.shape) for v in net.collect_params().values()])
 

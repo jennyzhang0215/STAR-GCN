@@ -204,8 +204,8 @@ class LoadData(object):
                 break
         assert idx+1 < node_ids.size
         test_ids = np.array(test_ids, dtype=np.int32)
-        train_ids = np.concatenate((np.array(train_ids, dtype=np.int32), shuffled_idx[idx+1: ]))
-        assert shuffled_idx.size == train_ids.size + test_ids.size
+        train_ids = np.concatenate((np.array(train_ids, dtype=np.int32), shuffled_nodes[idx+1: ]))
+        assert node_ids.size == train_ids.size + test_ids.size
         test_rating_pairs = np.hstack(test_rating_pairs_l).astype(np.int32)
         test_data = (test_rating_pairs,
                      self._graph.fetch_edges_by_id(src_key=self.name_user,

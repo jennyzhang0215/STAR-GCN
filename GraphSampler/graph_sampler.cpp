@@ -111,7 +111,7 @@ void slice_csr_mat(const int* src_end_points,
         col_idx_map.insert(std::make_pair(sel_col_indices[i], i));
     }
     ASSERT(col_idx_map.size() == dst_col_num);
-    int  global_nnz = 0;
+    int global_nnz = 0;
     int local_nnz = 0;
 #pragma omp parallel for private(local_nnz) reduction(+:global_nnz)
     for(int i = 0; i < dst_row_num; i++) {

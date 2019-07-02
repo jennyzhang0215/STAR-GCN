@@ -529,7 +529,7 @@ class CSRMat(object):
             else:
                 col_indices = np.ascontiguousarray(col_indices, dtype=np.int32)
         print("self.col_ids", self.col_ids.size)
-        print("dst_col_num", np.unique(self.ind_ptr).size)
+        print("dst_col_num", np.unique(self.end_points).size)
         dst_end_points, dst_values, dst_ind_ptr, dst_row_ids, dst_col_ids\
             = _graph_sampler.csr_submat(np.ascontiguousarray(self.end_points.astype(np.int32),
                                                              dtype=np.int32),

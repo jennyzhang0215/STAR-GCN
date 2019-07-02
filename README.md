@@ -29,7 +29,7 @@ python setup.py develop
 ## Training
 The training scripts are in the experiments directory. The chosen hyperparameters are stored in yml files in the cfg dirctory. 
 
-To train the MovieLens-100k in the transductive setting, we can run 
+For example, to train the MovieLens-100k in the transductive setting, we can run 
 ```bash
 cd experiments/cfg
 python ../STAR_GCN.py --ctx gpu0 --cfg transductive_ml-100k.yml

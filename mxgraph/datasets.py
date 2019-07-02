@@ -74,15 +74,19 @@ class LoadData(object):
 
         self._get_data(force_download)
         print("Starting processing {} ...".format(self._name))
+        if self._name== "ml-100k" or self._name == "ml-1m":
+            self._data_path = os.path.join(DATASET_PATH, self._name)
+        elif self._name == 'ml-10m':
+            self._data_path = os.path.join(DATASET_PATH, "ml-10M100K")
         self._load_raw_user_info()
         self._load_raw_movie_info()
 
         if self._name == 'ml-100k':
-            all_train_rating_info = self._load_raw_rates(os.path.join(DATASET_PATH, self._name, 'u1.base'), '\t')
-            test_rating_info = self._load_raw_rates(os.path.join(DATASET_PATH, self._name, 'u1.test'), '\t')
+            all_train_rating_info = self._load_raw_rates(os.path.join(self._data_path, 'u1.base'), '\t')
+            test_rating_info = self._load_raw_rates(os.path.join(self._data_path, 'u1.test'), '\t')
             all_rating_info = pd.concat([all_train_rating_info, test_rating_info])
         elif self._name == 'ml-1m' or self._name == 'ml-10m':
-            all_rating_info = self._load_raw_rates(os.path.join(DATASET_PATH, self._name, 'ratings.dat'), '::')
+            all_rating_info = self._load_raw_rates(os.path.join(self._data_path, 'ratings.dat'), '::')
         else:
             raise NotImplementedError
 
@@ -428,14 +432,14 @@ class LoadData(object):
         user_info : pd.DataFrame
         """
         if self._name == 'ml-100k':
-            self.user_info = pd.read_csv(os.path.join(DATASET_PATH, self._name, 'u.user'), sep='|', header=None,
+            self.user_info = pd.read_csv(os.path.join(self._data_path, 'u.user'), sep='|', header=None,
                                     names=['id', 'age', 'gender', 'occupation', 'zip_code'], engine='python')
         elif self._name == 'ml-1m':
-            self.user_info = pd.read_csv(os.path.join(DATASET_PATH, self._name, 'users.dat'), sep='::', header=None,
+            self.user_info = pd.read_csv(os.path.join(self._data_path, 'users.dat'), sep='::', header=None,
                                     names=['id', 'gender', 'age', 'occupation', 'zip_code'], engine='python')
         elif self._name == 'ml-10m':
             rating_info = pd.read_csv(
-                os.path.join(DATASET_PATH, self._name, 'ratings.dat'), sep='::', header=None,
+                os.path.join(self._data_path, 'ratings.dat'), sep='::', header=None,
                 names=['user_id', 'movie_id', 'rating', 'timestamp'],
                 dtype={'user_id': np.int32, 'movie_id': np.int32, 'ratings': np.float32,
                        'timestamp': np.int64}, engine='python')
@@ -511,12 +515,12 @@ class LoadData(object):
             raise NotImplementedError
 
         if self._name == 'ml-100k':
-            file_path = os.path.join(DATASET_PATH, self._name, 'u.item')
+            file_path = os.path.join(self._data_path, 'u.item')
             self.movie_info = pd.read_csv(file_path, sep='|', header=None,
                                           names=['id', 'title', 'release_date', 'video_release_date', 'url'] + GENRES,
                                           engine='python')
         elif self._name == 'ml-1m' or self._name == 'ml-10m':
-            file_path = os.path.join(DATASET_PATH, self._name, 'movies.dat')
+            file_path = os.path.join(self._data_path, 'movies.dat')
             movie_info = pd.read_csv(file_path, sep='::', header=None,
                                      names=['id', 'title', 'genres'], engine='python')
             genre_map = {ele: i for i, ele in enumerate(GENRES)}

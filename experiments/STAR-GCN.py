@@ -527,6 +527,7 @@ def train(seed):
             other_key = dataset.name_item
         else:
             raise NotImplementedError
+        print("DataIterator")
         data_iter = DataIterator(all_graph=all_graph,
                                  name_user=dataset.name_user,
                                  name_item=dataset.name_item,
@@ -543,6 +544,7 @@ def train(seed):
     logging.info(data_iter)
     ### build the net
     possible_rating_values = data_iter.possible_rating_values
+    print("Net ...")
     net = Net(all_graph=all_graph, nratings=possible_rating_values.size,
               name_user=dataset.name_user, name_item=dataset.name_item)
     net.initialize(init=mx.init.Xavier(factor_type='in'), ctx=args.ctx)

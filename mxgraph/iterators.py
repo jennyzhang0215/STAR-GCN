@@ -117,7 +117,7 @@ class DataIterator(object):
                  test_node_pairs=None, valid_node_pairs=None,
                  inductive_key=None,
                  inductive_valid_ids=None, inductive_train_ids=None,
-                 embed_p_mask=0.1, embed_p_zero=0.8, embed_p_random=0.1, embed_p_self=0.1,
+                 embed_P_mask=0.1, embed_p_zero=0.8, embed_p_random=0.1, embed_p_self=0.1,
                  seed=100):
         """
 
@@ -143,7 +143,7 @@ class DataIterator(object):
             Ratio of the links that are used for validation
         recon_valid_ratio : float
             Ratio of the nodes that are used for
-        embed_p_mask : dict or float
+        embed_P_mask : dict or float
             Probability of masking the embeddings.
         embed_p_zero : dict or float
             Probability of setting the embedding to zero.
@@ -213,10 +213,10 @@ class DataIterator(object):
         ### split train/val node ids for reconstruction loss
         self._recon_train_candidates = dict()
         #self._recon_valid_candidates = dict()
-        if isinstance(embed_p_mask, dict):
-            self._embed_p_mask = embed_p_mask
+        if isinstance(embed_P_mask, dict):
+            self._embed_P_mask = embed_P_mask
         else:
-            self._embed_p_mask = {key: embed_p_mask for key in all_graph.meta_graph}
+            self._embed_P_mask = {key: embed_P_mask for key in all_graph.meta_graph}
         if isinstance(embed_p_zero, dict):
             self._embed_p_zero = embed_p_zero
         else:
@@ -229,7 +229,7 @@ class DataIterator(object):
             self._embed_p_self = embed_p_self
         else:
             self._embed_p_self = {key: embed_p_self for key in all_graph.meta_graph}
-        for key in self._embed_p_mask:
+        for key in self._embed_P_mask:
             assert self._embed_p_zero[key] + self._embed_p_random[key] + self._embed_p_self[key] == 1.0
         self._evaluate_embed_noise_dict = dict()
         for key in self._train_graph.meta_graph:
@@ -385,7 +385,7 @@ class DataIterator(object):
                 embed_noise_dict = dict()
                 recon_node_ids_dict = dict()
                 for key, node_ids in self._recon_train_candidates.items():
-                    recon_node_num = int(np.ceil(self._embed_p_mask[key] * node_ids.size))
+                    recon_node_num = int(np.ceil(self._embed_P_mask[key] * node_ids.size))
                     perm_node_ids = self._rng.permutation(node_ids)
                     recon_node_ids = perm_node_ids[:recon_node_num]
                     remain_node_ids = perm_node_ids[recon_node_num:]

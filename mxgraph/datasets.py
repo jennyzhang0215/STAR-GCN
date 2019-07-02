@@ -366,17 +366,17 @@ class LoadData(object):
 
 
     def _drop_unseen_nodes(self, orign_info, cmp_col_name, reserved_ids_set, label):
-        print("  -----------------")
-        print("{}: {}(reserved) v.s. {}(from info)".format(label, len(reserved_ids_set),
-                                                             len(set(orign_info[cmp_col_name].values))))
+        #print("  -----------------")
+        #print("{}: {}(reserved) v.s. {}(from info)".format(label, len(reserved_ids_set),
+        #                                                     len(set(orign_info[cmp_col_name].values))))
         if reserved_ids_set != set(orign_info[cmp_col_name].values):
             pd_rating_ids = pd.DataFrame(list(reserved_ids_set), columns=["id_graph"])
-            print("\torign_info: ({}, {})".format(orign_info.shape[0], orign_info.shape[1]))
+            #print("\torign_info: ({}, {})".format(orign_info.shape[0], orign_info.shape[1]))
             data_info = orign_info.merge(pd_rating_ids, left_on=cmp_col_name, right_on='id_graph', how='outer')
             data_info = data_info.dropna(subset=[cmp_col_name, 'id_graph'])
             data_info = data_info.drop(columns=["id_graph"])
             data_info = data_info.reset_index(drop=True)
-            print("\tAfter dropping, data shape: ({}, {})".format(data_info.shape[0], data_info.shape[1]))
+            #print("\tAfter dropping, data shape: ({}, {})".format(data_info.shape[0], data_info.shape[1]))
             return data_info
         else:
             orign_info = orign_info.reset_index(drop=True)
@@ -605,5 +605,6 @@ class LoadData(object):
 
 
 if __name__ == '__main__':
-    LoadData('ml-100k', use_inductive=False, test_ratio=0.2, val_ratio=0.1, seed=100)
-    LoadData('ml-1m', use_inductive=False, test_ratio=0.1, val_ratio=0.1, seed=100)
+    #LoadData('ml-100k', use_inductive=False, test_ratio=0.2, val_ratio=0.1, seed=100)
+    #LoadData('ml-1m', use_inductive=False, test_ratio=0.1, val_ratio=0.1, seed=100)
+    LoadData('ml-10m', use_inductive=False, test_ratio=0.1, val_ratio=0.1, seed=100)

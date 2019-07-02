@@ -62,8 +62,8 @@ def config():
 
     cfg.EMBED = edict()
     cfg.EMBED.UNITS = 64
-    cfg.EMBED.MASK_PROP = 0.2
-    cfg.EMBED.P_ZERO = 1.0
+    cfg.EMBED.MASK_PROP = 0.1
+    cfg.EMBED.P_ZERO = 0.0
 
     cfg.GCN = edict()
     cfg.GCN.TYPE = 'gcn'
@@ -72,14 +72,9 @@ def config():
     cfg.GCN.AGG = edict()
     cfg.GCN.AGG.NORM_SYMM = True
     cfg.GCN.AGG.UNITS = [500]  # Number of aggregator units
-    cfg.GCN.AGG.ACCUM = "sum"
-    cfg.GCN.AGG.SHARE_WEIGHTS = False
-    cfg.GCN.AGG.ORDINAL_SHARE = False
+    cfg.GCN.AGG.ACCUM = "stack"
     cfg.GCN.OUT = edict()
-    cfg.GCN.OUT.ACCUM_SELF = False
     cfg.GCN.OUT.UNITS = [75]  # [50, 100] ### the hidden state of FC
-    cfg.GCN.OUT.ACCUM = "stack"
-    cfg.GCN.OUT.SHARE_WEIGHTS = False
 
     cfg.GEN_RATING = edict()
     cfg.GEN_RATING.MID_MAP = 64
@@ -220,15 +215,9 @@ class Net(nn.Block):
                                                       agg_units=agg_units,
                                                       out_units=out_units,
                                                       source_keys=source_keys,
-                                                      agg_ordinal_sharing=_GCN.AGG.ORDINAL_SHARE,
-                                                      share_agg_weights=_GCN.AGG.SHARE_WEIGHTS,
                                                       agg_accum=_GCN.AGG.ACCUM,
                                                       agg_act=_MODEL.ACTIVATION,
-                                                      accum_self=_GCN.OUT.ACCUM_SELF,
                                                       out_act=_MODEL.ACTIVATION,
-                                                      layer_accum=_GCN.OUT.ACCUM,
-                                                      share_out_fc_weights=_GCN.OUT.SHARE_WEIGHTS,
-                                                      layer_norm=False,
                                                       prefix='l{}_'.format(i)))
                             if _GCN.USE_RECURRENT:
                                 # In the recurrent formula, we will only create one layer

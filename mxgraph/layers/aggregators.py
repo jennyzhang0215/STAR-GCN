@@ -1,6 +1,8 @@
 from mxnet.gluon import nn
 #from mxgraph.layers.common import *
 from mxgraph.layers.common import get_activation
+import numpy as np
+
 
 class BaseAggregator(nn.HybridBlock):
     @property

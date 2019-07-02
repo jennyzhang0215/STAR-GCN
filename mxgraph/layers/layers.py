@@ -2,8 +2,10 @@ import warnings
 from ..graph import HeterGraph, empty_as_zero, merge_nodes, unordered_unique
 from .aggregators import *
 from ..utils import copy_to_ctx
+from mxnet.gluon import nn
+import mxnet as mx
 
-class LayerDictionary(Block):
+class LayerDictionary(nn.Block):
     def __init__(self, **kwargs):
         """
         
@@ -37,7 +39,7 @@ class LayerDictionary(Block):
         return key in self._key2idx
 
 
-class HeterGCNLayer(Block):
+class HeterGCNLayer(nn.Block):
     def __init__(self, meta_graph, multi_link_structure, agg_units, out_units, source_keys=None,
                  dropout_rate=0.0,
                  agg_ordinal_sharing=False, share_agg_weights=False,
@@ -243,7 +245,7 @@ class HeterGCNLayer(Block):
         return out
 
 
-class BiDecoder(HybridBlock):
+class BiDecoder(nn.HybridBlock):
     def __init__(self, in_units, out_units, num_basis_functions=2, prefix=None, params=None):
         super(BiDecoder, self).__init__(prefix=prefix, params=params)
         self._num_basis_functions = num_basis_functions
@@ -267,7 +269,7 @@ class BiDecoder(HybridBlock):
         return out
 
 
-class InnerProductLayer(HybridBlock):
+class InnerProductLayer(nn.HybridBlock):
     def __init__(self, mid_units=None, **kwargs):
         super(InnerProductLayer, self).__init__(**kwargs)
         self._mid_units = mid_units

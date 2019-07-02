@@ -4,7 +4,7 @@ The MXNet implementation of [STAR-GCN: Stacked and Reconstructed Graph Convoluti
 ## Prerequisite
 
 ### Requirements
-  * [MXNet](https://mxnet.incubator.apache.org/) 
+  * [MXNet](https://mxnet.incubator.apache.org/) Version 1.5.0
     * Please [build from source](https://mxnet.incubator.apache.org/versions/master/install/ubuntu_setup.html#build-mxnet-from-source)
     * Compile the customized kernel according to the [README](https://github.com/jennyzhang0215/STAR-GCN/blob/master/seg_ops_cuda)
   * GraphSampler
@@ -14,7 +14,7 @@ The MXNet implementation of [STAR-GCN: Stacked and Reconstructed Graph Convoluti
 pip install gluonnlp
 ```
 
- * [spaCy](https://spacy.io/usage)
+  * [spaCy](https://spacy.io/usage)
  ```bash
  pip install spacy
  python -m spacy download en

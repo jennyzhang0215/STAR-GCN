@@ -1,6 +1,6 @@
 Implementation of the Segmented Operators
 -----------------------------------------
-To use the following operators, copy the `seg_op.*` files in [mxnet_op](mxnet_op) to `mxnet/src/operator/contrib`.
+To use the following operators, copy the `seg_op.*` files in [mxnet_op](mxnet_op) to `incubator-mxnet/src/operator/contrib`.
 
 - [seg_sum](#seg_sum)
 - [seg_broadcast_add](#seg_broadcast_add)

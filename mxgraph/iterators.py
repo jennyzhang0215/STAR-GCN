@@ -117,7 +117,7 @@ class DataIterator(object):
                  test_node_pairs=None, valid_node_pairs=None,
                  inductive_key=None,
                  inductive_valid_ids=None, inductive_train_ids=None,
-                 embed_P_mask=0.1, embed_p_zero=0.8, embed_p_random=0.1, embed_p_self=0.1,
+                 embed_P_mask=0.1, embed_p_zero=1.0, embed_p_self=0.0,
                  seed=100):
         """
 
@@ -147,8 +147,6 @@ class DataIterator(object):
             Probability of masking the embeddings.
         embed_p_zero : dict or float
             Probability of setting the embedding to zero.
-        embed_p_random : dict or float
-            Probability of setting the embedding of node i to the embedding of a random node j.
         embed_p_self : dict or float
             Probability of keep the original embedding
         seed : int or None
@@ -221,16 +219,12 @@ class DataIterator(object):
             self._embed_p_zero = embed_p_zero
         else:
             self._embed_p_zero = {key: embed_p_zero for key in all_graph.meta_graph}
-        if isinstance(embed_p_random, dict):
-            self._embed_p_random = embed_p_random
-        else:
-            self._embed_p_random = {key: embed_p_random for key in all_graph.meta_graph}
         if isinstance(embed_p_self, dict):
             self._embed_p_self = embed_p_self
         else:
             self._embed_p_self = {key: embed_p_self for key in all_graph.meta_graph}
         for key in self._embed_P_mask:
-            assert self._embed_p_zero[key] + self._embed_p_random[key] + self._embed_p_self[key] == 1.0
+            assert self._embed_p_zero[key] + self._embed_p_self[key] == 1.0
         self._evaluate_embed_noise_dict = dict()
         for key in self._train_graph.meta_graph:
             #permutation_idx = self._rng.permutation(self._train_graph.node_ids[key].shape[0])
@@ -392,17 +386,14 @@ class DataIterator(object):
                     if recon_node_ids.size > 0:
                         recon_node_ids_dict[key] = recon_node_ids
                         mask_type = self._rng.multinomial(1, [self._embed_p_zero[key],
-                                                              self._embed_p_self[key],
-                                                              self._embed_p_random[key]],
+                                                              self._embed_p_self[key]],
                                                           size=recon_node_ids.size)
-                        random_node_ids = self._rng.choice(node_ids, size=recon_node_ids.size, replace=True)
                         ### nodes unseen in the training graph are masked as -1.0
                         embed_noise = -np.ones(self._all_graph.node_ids[key].shape, dtype=np.int32)
                         embed_noise[remain_node_ids] = remain_node_ids
                         embed_noise[recon_node_ids] =\
-                            (mask_type * np.stack([-np.ones(recon_node_ids.shape),
-                                                   recon_node_ids,
-                                                   random_node_ids], axis=1)).sum(axis=1).astype(np.int32)
+                            (mask_type * np.stack([-np.ones(recon_node_ids.shape), recon_node_ids],
+                                                  axis=1)).sum(axis=1).astype(np.int32)
                         embed_noise_dict[key] = embed_noise
                     else:
                         embed_noise_dict[key] = -np.ones(self._all_graph.node_ids[key].shape,

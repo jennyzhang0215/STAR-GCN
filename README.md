@@ -31,17 +31,17 @@ The training scripts are in the experiments directory. The chosen hyperparameter
 
 To train the MovieLens-100k in the transductive setting, we can run 
 ```bash
-cd experiments
-cd cfg
+cd experiments/cfg
 python ../STAR_GCN.py --ctx gpu0 --cfg transductive_ml-100k.yml
 ```
 
 ## Cite
 Please cite our paper if you use this code in your own work:
-
+```
 @article{zhang2019star,
   title={STAR-GCN: Stacked and Reconstructed Graph Convolutional Networks for Recommender Systems},
   author={Zhang, Jiani and Shi, Xingjian and Zhao, Shenglin and King, Irwin},
   journal={arXiv preprint arXiv:1905.13129},
   year={2019}
 }
+```

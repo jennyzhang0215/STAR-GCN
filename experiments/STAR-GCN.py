@@ -44,13 +44,12 @@ def config():
     cfg.MODEL = edict()
     cfg.MODEL.USE_EMBED = True
     cfg.MODEL.USE_FEA_PROJ = False
+    cfg.MODEL.RECON_FEA = False
     cfg.MODEL.REMOVE_RATING = True
-    cfg.MODEL.RECON_FEA = True
-    cfg.MODEL.USE_DAE = False  # Use the denoising autoencoder structure.
-    cfg.MODEL.NBLOCKS = 1  # Number of AE blocks. NBLOCK = 3 ==> AE1 --> AE2 --> AE3 Like the hourglass structure
+    cfg.MODEL.USE_DAE = True  # Use the denoising autoencoder structure.
+    cfg.MODEL.NBLOCKS = 2  # Number of AE blocks. NBLOCK = 3 ==> AE1 --> AE2 --> AE3 Like the hourglass structure
     cfg.MODEL.USE_RECURRENT = False  # Whether to share the weights between different AE blocks
     cfg.MODEL.RECON_LAMBDA = 0.1  # Weight for the reconstruction loss
-    cfg.MODEL.LOWER_BLOCK_LAMBDA = 1.0
     cfg.MODEL.ACTIVATION = "leaky"
 
     cfg.GRAPH_SAMPLER = edict()  # Sample a random number of neighborhoods for mini-batch training
@@ -323,9 +322,8 @@ class Net(nn.Block):
         return out_fea_dict
 
 
-    def forward(self, graph, feature_dict, rating_node_pairs=None, embed_noise_dict=None, recon_node_ids_dict=None,
-                all_masked_node_ids_dict=None, graph_sampler_args=None, symm=None,
-                output_inner_result=False, input_node_ids_dict=None):
+    def forward(self, graph, feature_dict, rating_node_pairs=None,
+                embed_noise_dict=None, recon_node_ids_dict=None, graph_sampler_args=None, symm=None):
         """
 
         Parameters
@@ -346,9 +344,6 @@ class Net(nn.Block):
             Arguments for graph sampler
         symm : bool
             Whether to calculate the support in the symmetric formula
-        output_inner_result : bool
-            Whether to output the inner results
-        input_node_ids_dict : dict
 
         Returns
         -------
@@ -364,7 +359,7 @@ class Net(nn.Block):
         if symm is None:
             symm = _GCN.AGG.NORM_SYMM
         ctx = next(iter(feature_dict.values())).context
-        req_node_ids_dict = input_node_ids_dict if output_inner_result else dict()
+        req_node_ids_dict = dict()
         encoder_fwd_plan = [None for _ in range(_MODEL.NBLOCKS)]
         encoder_fwd_indices = [None for _ in range(_MODEL.NBLOCKS)]
         pred_ratings = []
@@ -432,11 +427,6 @@ class Net(nn.Block):
             else:
                 input_dict = fea_dict
 
-        if output_inner_result:
-            inner_node_emebdding = {}
-            inner_node_emebdding["input"] = input_dict
-            inner_node_emebdding["enc"] = []
-            inner_node_emebdding["dec"] = []
         for block_id in range(_MODEL.NBLOCKS):
             encoder = self.encoders[0] if _MODEL.USE_RECURRENT else self.encoders[block_id]
             output_dict = encoder.heter_sage(input_dict, encoder_fwd_plan[block_id])
@@ -482,12 +472,8 @@ class Net(nn.Block):
                                                 feature_dict=feature_dict)
                     for key in input_dict:
                         input_dict[key] = mx.nd.concat(input_dict[key], fea_dict[key], dim=-1)
-                if output_inner_result:
-                    inner_node_emebdding["dec"].append(input_dict)
-        if output_inner_result:
-            return inner_node_emebdding
-        else:
-            return pred_ratings, pred_embeddings, gt_embeddings
+
+        return pred_ratings, pred_embeddings, gt_embeddings
 
 
 
@@ -660,7 +646,7 @@ def train(seed):
             loss.backward()
         gnorm = params_clip_global_norm(net.collect_params(), _TRAIN.GRAD_CLIP, args.ctx)
         avg_gnorm += gnorm
-        trainer.step(1.0) #, ignore_stale_grad=True)
+        trainer.step(1.0)
 
         if iter_idx == 1:
             logging.info("Total #Param of net: %d" % (gluon_total_param_num(net)))
@@ -693,12 +679,12 @@ def train(seed):
             logging_str += log_str(avg_rating_loss_l, "RT")
             if _MODEL.USE_DAE:
                 logging_str += log_str(avg_recon_loss_l, "RC")
-            logging_str += ', '  + ', '.join(["RMSE{}={:.4f}".format(i, np.sqrt(avg_rmse_l[i][0] / avg_rmse_l[i][1]))
+            logging_str += ', '  + ', '.join(["RMSE{}={:.3f}".format(i, np.sqrt(avg_rmse_l[i][0] / avg_rmse_l[i][1]))
                                               for i in range(_MODEL.NBLOCKS)])
-
             avg_gnorm = 0
             avg_rmse_l = [[0, 0] for _ in range(_MODEL.NBLOCKS)]
             avg_recon_loss_l = [[0, 0] for _ in range(_MODEL.NBLOCKS)]
+
         if iter_idx % _TRAIN.VALID_INTERVAL == 0:
             valid_rmse_l = evaluate(net=net,
                                     feature_dict=feature_dict,
@@ -714,12 +700,12 @@ def train(seed):
                 best_valid_rmse = valid_rmse_l[-1]
                 no_better_valid = 0
                 best_iter = iter_idx
-                #net.save_parameters(filename=os.path.join(args.save_dir, 'best_valid_net{}.params'.format(args.save_id)))
+                # net.save_parameters(filename=os.path.join(args.save_dir, 'best_valid_net{}.params'.format(args.save_id)))
                 test_rmse_l = evaluate(net=net, feature_dict=feature_dict, ctx=args.ctx,
                                        data_iter=data_iter, segment='test')
                 best_test_rmse_l = test_rmse_l
-                test_loss_logger.log(**dict([('iter', iter_idx)] + [('rmse{}'.format(i), ele_rmse)
-                                                                    for i, ele_rmse in enumerate(test_rmse_l)]))
+                test_loss_logger.log(**dict([('iter', iter_idx)] +
+                                            [('rmse{}'.format(i), ele_rmse) for i, ele_rmse in enumerate(test_rmse_l)]))
                 logging_str += ', ' + ', '.join(["Test RMSE{}={:.4f}".format(i, ele_rmse)
                                                  for i, ele_rmse in enumerate(test_rmse_l)])
             else:
@@ -736,7 +722,7 @@ def train(seed):
                         no_better_valid = 0
         if iter_idx  % _TRAIN.LOG_INTERVAL == 0:
             logging.info(logging_str)
-    logging.info('Best Iter Idx={}, Best Valid RMSE={:.4f}, '.format(best_iter, best_valid_rmse) +
+    logging.info('Best Iter Idx={}, Best Valid RMSE={:.3f}, '.format(best_iter, best_valid_rmse) +
                  ', '.join(["Best Test RMSE{}={:.4f}".format(i, ele_rmse)
                             for i, ele_rmse in enumerate(best_test_rmse_l)]))
     train_loss_logger.close()

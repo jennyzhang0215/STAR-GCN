@@ -164,7 +164,6 @@ def gen_pair_key(src_key, dst_key):
         return dst_key, src_key
 
 
-
 class Net(nn.Block):
     def __init__(self, all_graph, nratings, name_user, name_item, **kwargs):
         super(Net, self).__init__(**kwargs)
@@ -510,15 +509,15 @@ def train(seed):
     test_node_pairs, _ = dataset.test_data
     if not _DATA.IS_INDUCTIVE:
         data_iter = DataIterator(all_graph=all_graph,
-                                  name_user=dataset.name_user,
-                                  name_item=dataset.name_item,
-                                  test_node_pairs=test_node_pairs,
-                                  valid_node_pairs=valid_node_pairs,
-                                  is_inductive=_DATA.IS_INDUCTIVE,
-                                  embed_P_mask=_EMBED.MASK_PROP,
-                                  embed_p_zero=_EMBED.P_ZERO,
-                                  embed_p_self=1.0-_EMBED.P_ZERO,
-                                  seed=seed)
+                                 name_user=dataset.name_user,
+                                 name_item=dataset.name_item,
+                                 test_node_pairs=test_node_pairs,
+                                 valid_node_pairs=valid_node_pairs,
+                                 is_inductive=_DATA.IS_INDUCTIVE,
+                                 embed_P_mask=_EMBED.MASK_PROP,
+                                 embed_p_zero=_EMBED.P_ZERO,
+                                 embed_p_self=1.0-_EMBED.P_ZERO,
+                                 seed=seed)
     else:
         if _DATA.INDUCTIVE_KEY == "item":
             inductive_key = dataset.name_item
@@ -529,18 +528,18 @@ def train(seed):
         else:
             raise NotImplementedError
         data_iter = DataIterator(all_graph=all_graph,
-                                  name_user=dataset.name_user,
-                                  name_item=dataset.name_item,
-                                  test_node_pairs=test_node_pairs,
-                                  valid_node_pairs=valid_node_pairs,
-                                  is_inductive=_DATA.IS_INDUCTIVE,
-                                  inductive_key=inductive_key,
-                                  inductive_valid_ids=dataset.inductive_valid_ids,
-                                  inductive_train_ids=dataset.inductive_train_ids,
-                                  embed_P_mask=_EMBED.MASK_PROP,
-                                  embed_p_zero={inductive_key: _EMBED.P_ZERO, other_key: 0.0},
-                                  embed_p_self={inductive_key: 1.0-_EMBED.P_ZERO, other_key: 1.0},
-                                  seed=seed)
+                                 name_user=dataset.name_user,
+                                 name_item=dataset.name_item,
+                                 test_node_pairs=test_node_pairs,
+                                 valid_node_pairs=valid_node_pairs,
+                                 is_inductive=_DATA.IS_INDUCTIVE,
+                                 inductive_key=inductive_key,
+                                 inductive_valid_ids=dataset.inductive_valid_ids,
+                                 inductive_train_ids=dataset.inductive_train_ids,
+                                 embed_P_mask=_EMBED.MASK_PROP,
+                                 embed_p_zero={inductive_key: _EMBED.P_ZERO, other_key: 0.0},
+                                 embed_p_self={inductive_key: 1.0-_EMBED.P_ZERO, other_key: 1.0},
+                                 seed=seed)
     logging.info(data_iter)
     ### build the net
     possible_rating_values = data_iter.possible_rating_values

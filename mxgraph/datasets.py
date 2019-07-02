@@ -209,6 +209,7 @@ class LoadData(object):
                      self._graph.fetch_edges_by_id(src_key=self.name_user,
                                                    dst_key=self.name_item,
                                                    node_pair_ids=test_rating_pairs))
+        print("test_data", test_data)
         return train_ids, test_ids, test_data
 
     @property

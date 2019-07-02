@@ -227,11 +227,6 @@ class DataIterator(object):
             assert self._embed_p_zero[key] + self._embed_p_self[key] == 1.0
         self._evaluate_embed_noise_dict = dict()
         for key in self._train_graph.meta_graph:
-            #permutation_idx = self._rng.permutation(self._train_graph.node_ids[key].shape[0])
-            #valid_num = int(np.ceil(self._train_graph.node_ids[key].shape[0] * recon_valid_ratio))
-            #self._recon_valid_candidates[key] = self._train_graph.node_ids[key][permutation_idx[:valid_num]]
-            ### TODO set all training node ids as the reconstrution candidates
-            #self._recon_train_candidates[key] = self._train_graph.node_ids[key][permutation_idx[valid_num:]]
             self._recon_train_candidates[key] = self._train_graph.node_ids[key]
             self._evaluate_embed_noise_dict[key] = -np.ones(self._all_graph.node_ids[key].shape,
                                                             dtype=np.int32)
@@ -239,12 +234,6 @@ class DataIterator(object):
             print("{}: all_node_num {} v.s. train_node_num {}".format(key, self._all_graph.node_ids[key].size,
                                                                       train_node_ids.size,))
             self._evaluate_embed_noise_dict[key][train_node_ids] = train_node_ids
-        # Generate the embed noise for validation, validation node_ids set to be -1.0
-        # self._recon_valid_embed_noise = dict()
-        # for key, node_ids in self._recon_train_candidates.items():
-        #     embed_noise = - np.ones(self._all_graph.node_ids[key].shape, dtype=np.int32)
-        #     embed_noise[node_ids] = node_ids
-        #     self._recon_valid_embed_noise[key] = embed_noise
 
     @property
     def possible_rating_values(self):
@@ -316,45 +305,6 @@ class DataIterator(object):
                 else:
                     sel = self._rng.choice(node_pairs.shape[1], batch_size, replace=False)
                     yield node_pairs[:, sel], ratings[sel]
-
-    def linkpred_sampler(self, batch_size, neg_sample_type, neg_ratio=1.0,
-                         segment='train', sequential=False):
-        """ Return the sampler for link prediction
-
-        Parameters
-        ----------
-        batch_size : int
-        neg_sample_type : str
-            Can be 'same_node' or 'all'.
-            If it is set to be 'same_node', it will sample a random edge with one of the end points
-             to be the same as the positive edge.
-            If it is set to be 'all', it will sample a random edge from all
-        neg_ratio : float
-            Will only be used when neg_sample_type is 'all'
-        segment : str
-            The sampling segment. Can be 'train', 'valid' or 'test'
-        sequential: bool or None
-            Whether to sample in a sequential manner. If it's set to None, it will be
-            automatically determined based on the sampling segment.
-
-        Returns
-        -------
-        pos_edges_dict : dict
-        neg_edges_dict : dict
-        """
-        assert segment is 'train'
-        assert sequential is False
-        while True:
-            pos_edges_dict = dict()
-            neg_edges_dict = dict()
-            for key, all_pos_edges in self._train_pos_edges_dict.items():
-                generator = self._neg_edge_generators[key]
-                idx = self._rng.choice(all_pos_edges.shape[1], batch_size, replace=True)
-                pos_edges = all_pos_edges[:, idx]
-                neg_edges = generator.gen(pos_edges, neg_sample_type, neg_ratio)
-                pos_edges_dict[key] = pos_edges
-                neg_edges_dict[key] = neg_edges
-            yield pos_edges_dict, neg_edges_dict
 
     def recon_nodes_sampler(self, batch_size, segment='train', sequential=False):
         """

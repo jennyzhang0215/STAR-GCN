@@ -565,8 +565,11 @@ def train(seed):
                                     ['%d'] + ['%.4f'] * _MODEL.NBLOCKS,
                                     os.path.join(args.save_dir, 'test_loss%d.csv' % args.save_id))
     ### initialize the iterator
+    print("sampler ...")
     rating_sampler = data_iter.rating_sampler(batch_size=_TRAIN.RATING_BATCH_SIZE, segment='train')
+    print("recon_nodes_sampler ...")
     recon_sampler = data_iter.recon_nodes_sampler(batch_size=_TRAIN.RECON_BATCH_SIZE, segment='train')
+    print("gen_graph_sampler_args")
     graph_sampler_args = gen_graph_sampler_args(all_graph.meta_graph)
     rating_mean = data_iter._train_ratings.mean()
     rating_std = data_iter._train_ratings.std()

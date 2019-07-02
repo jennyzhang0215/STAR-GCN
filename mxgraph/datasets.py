@@ -152,7 +152,6 @@ class LoadData(object):
             valid_values = test_rating_info['rating'].values.astype(np.float32)
             self._valid_data = (valid_node_pairs, valid_values)
         else:
-            self._inductive_key = inductive_key
             self._inductive_node_frac = inductive_node_frac
             self._inductive_edge_frac = inductive_edge_frac
             if inductive_key == "item":
@@ -162,10 +161,14 @@ class LoadData(object):
             else:
                 raise NotImplementedError
             all_node_ids = self.graph.node_ids[self._inductive_key]
+            print("all_node_ids", all_node_ids.size, all_node_ids)
             train_val_ids, self._inductive_test_ids, self._test_data = \
                 self._gen_inductive_data(all_node_ids)
+            print("train_val_ids", train_val_ids.size, train_val_ids)
             self._inductive_train_ids, self._inductive_valid_ids, self._valid_data = \
                 self._gen_inductive_data(train_val_ids)
+            assert np.unique(self._inductive_train_ids).size + np.unique(self._inductive_valid_ids).size + \
+                   np.unique(self._inductive_test_ids).size == all_node_ids.size
 
 
     def _gen_inductive_data(self, node_ids):

@@ -279,7 +279,7 @@ class LoadData(object):
             os.makedirs(self._root)
         data_name, url, data_hash = self._raw_data_urls[self._name]
         path = os.path.join(self._root, data_name)
-        if not os.path.exists(path) or not check_sha1(path, data_hash) or force_download:
+        if not os.path.exists(path) or force_download: #or not check_sha1(path, data_hash):
             print("\n\n=====================> Download dataset")
             self.download(url, path=path, sha1_hash=data_hash)
             with ZipFile(path, 'r') as zf:
@@ -327,7 +327,6 @@ class LoadData(object):
             warnings.warn(
                 'Unverified HTTPS request is being made (verify_ssl=False). '
                 'Adding certificate verification is strongly advised.')
-        print("fname: {} ".format(fname))
         if overwrite or not os.path.exists(fname) or (sha1_hash and not check_sha1(fname, sha1_hash)):
             dirname = os.path.dirname(os.path.abspath(os.path.expanduser(fname)))
             if not os.path.exists(dirname):
@@ -606,3 +605,4 @@ class LoadData(object):
 
 if __name__ == '__main__':
     LoadData('ml-100k', use_inductive=False, test_ratio=0.2, val_ratio=0.1, seed=100)
+    LoadData('ml-1m', use_inductive=False, test_ratio=0.1, val_ratio=0.1, seed=100)

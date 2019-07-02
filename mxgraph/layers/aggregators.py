@@ -1,6 +1,7 @@
-from mxnet.gluon import nn
+from mxnet.gluon import nn, HybridBlock
 #from mxgraph.layers.common import *
 from mxgraph.layers.common import get_activation
+
 class BaseAggregator(HybridBlock):
     @property
     def use_mulit_link(self):

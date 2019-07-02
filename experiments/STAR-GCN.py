@@ -118,11 +118,8 @@ def config():
     ### Some Default flag
     cfg.DATASET.USE_INPUT_TEST_SET = True
     cfg.DATASET.TEST_RATIO = 0.2
-    #cfg.DATASET.USE_ONE_HOT_FEA = False
     #cfg.GEN_RATING.USE_CLASSIFICATION = False
     #cfg.GEN_RATING.NUM_BASIS_FUNC = 2
-    #if cfg.DATASET.USE_ONE_HOT_FEA:
-    #    cfg.MODEL.USE_EMBED = False
     return cfg, args
 
 
@@ -155,13 +152,7 @@ def load_dataset(seed):
     feature_dict = dict()
     info_line = "Feature dim: "
     for key in all_graph.meta_graph:
-        if _DATA.USE_ONE_HOT_FEA:
-            nd_indices = mx.nd.arange(all_graph.features[key].shape[0], ctx=args.ctx, dtype=np.int32)
-            features = mx.nd.one_hot(nd_indices, nd_indices.size)
-            assert _MODEL.USE_EMBED is False
-        else:
-            ### use input node features x
-            features = mx.nd.array(all_graph.features[key], ctx=args.ctx, dtype=np.float32)
+        features = mx.nd.array(all_graph.features[key], ctx=args.ctx, dtype=np.float32)
         feature_dict[key] = features
         info_line += "\n" + key + ": {}".format(features.shape)
     logging.info(info_line)

@@ -1,6 +1,4 @@
-import os
 import io
-import numpy as np
 from mxnet.gluon.utils import check_sha1
 from mxgraph.graph import CSRMat, HeterGraph
 from zipfile import ZipFile
@@ -11,7 +9,6 @@ import re
 import pandas as pd
 import scipy.sparse as sp
 import gluonnlp as nlp
-import mxnet as mx
 try:
     import requests
 except ImportError:

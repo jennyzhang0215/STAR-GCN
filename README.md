@@ -11,4 +11,8 @@ The code is not ready. Please check later.
 pip install gluonnlp
 ```
 
-
+ * spacy
+ ```bash
+ pip install spacy
+ python -m spacy download en
+ ```

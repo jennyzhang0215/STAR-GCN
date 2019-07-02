@@ -12,11 +12,12 @@ setuptools.setup(
         os.path.abspath(__file__)), 'README.md')).read(),
     license='MIT',
     url='https://github.com/jennyzhang0215/STAR-GCN',
-    install_requires=['numpy', 'scipy', 'matplotlib', 'six', 'pyyaml', 'sklearn', 'pandas', 'mxnet'],
+    install_requires=['numpy', 'scipy', 'matplotlib', 'six', 'pyyaml', 'sklearn', 'pandas',
+                      'warnings', 'spacy', 'mxnet', 'gluonnlp'],
     classifiers=['Development Status :: 2 - Pre-Alpha',
                  'Intended Audience :: Science/Research',
                  'License :: OSI Approved :: MIT License',
                  'Natural Language :: English',
                  'Operating System :: OS Independent',
-                 'Topic :: Scientific/Engineering :: Artificial Intelligence'],
+                 'Topic :: Scientific/Engineering :: Artificial Intelligence']
 )

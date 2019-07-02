@@ -7,7 +7,7 @@ from mxnet import gluon
 from mxnet.gluon import nn
 from mxgraph.datasets import LoadData
 from mxgraph.graph import HeterGraph, merge_node_ids_dict, set_seed
-from mxgraph.layers import HeterGCNLayer, BiDecoder, StackedHeterGCNLayers, LayerDictionary, InnerProductLayer
+from mxgraph.layers import HeterGCNLayer, StackedHeterGCNLayers, LayerDictionary, InnerProductLayer
 from mxgraph.layers.common import get_activation
 from mxgraph.iterators import DataIterator
 from mxgraph.utils import gluon_net_info, parse_ctx, logging_config, gluon_total_param_num, params_clip_global_norm
@@ -118,8 +118,6 @@ def config():
     ### Some Default flag
     cfg.DATASET.USE_INPUT_TEST_SET = True
     cfg.DATASET.TEST_RATIO = 0.2
-    #cfg.GEN_RATING.USE_CLASSIFICATION = False
-    #cfg.GEN_RATING.NUM_BASIS_FUNC = 2
     return cfg, args
 
 
@@ -264,13 +262,7 @@ class Net(nn.Block):
                                                                 prefix='{}_l1_'.format(key)))
                         self.embed_maps.add(embed_map)
 
-            if _GEN_RATING.USE_CLASSIFICATION:
-                self.gen_ratings = BiDecoder(in_units=_GEN_RATING.MID_MAP,
-                                             out_units=nratings,
-                                             num_basis_functions=_GEN_RATING.NUM_BASIS_FUNC,
-                                             prefix='gen_rating')
-            else:
-                self.gen_ratings = InnerProductLayer(prefix='gen_rating')
+            self.gen_ratings = InnerProductLayer(prefix='gen_rating')
 
             self.rating_user_projs = nn.Sequential(prefix='rating_user_proj_')
             self.rating_item_projs = nn.Sequential(prefix='rating_item_proj_')
@@ -525,12 +517,7 @@ def evaluate(net, feature_dict, ctx, data_iter, segment='valid'):
                           graph_sampler_args=graph_sampler_args,
                           symm=_GCN.AGG.NORM_SYMM)
         for i in range(_MODEL.NBLOCKS):
-            if _GEN_RATING.USE_CLASSIFICATION:
-                real_pred_ratings = (mx.nd.softmax(pred_ratings[i], axis=1) *
-                                     nd_possible_rating_values.reshape((1, -1))).sum(axis=1)
-                rmse_l[i] += mx.nd.square(real_pred_ratings - nd_gt_ratings).sum().asscalar()
-            else:
-                rmse_l[i] +=\
+            rmse_l[i] +=\
                     mx.nd.square(mx.nd.clip(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean,
                                             possible_rating_values.min(),
                                             possible_rating_values.max()) - nd_gt_ratings).sum().asscalar()
@@ -590,10 +577,7 @@ def train(seed):
               name_user=dataset.name_user, name_item=dataset.name_item)
     net.initialize(init=mx.init.Xavier(factor_type='in'), ctx=args.ctx)
     net.hybridize()
-    if _GEN_RATING.USE_CLASSIFICATION:
-        rating_loss_net = gluon.loss.SoftmaxCELoss()
-    else:
-        rating_loss_net = gluon.loss.L2Loss()
+    rating_loss_net = gluon.loss.L2Loss()
     rating_loss_net.hybridize()
     trainer = gluon.Trainer(net.collect_params(), _TRAIN.OPTIMIZER,
                             {'learning_rate': _TRAIN.LR, 'wd': _TRAIN.WD})
@@ -636,9 +620,6 @@ def train(seed):
             embed_noise_dict, recon_node_ids_dict, all_masked_node_ids_dict = None, None, None
 
         nd_gt_ratings = mx.nd.array(gt_ratings, ctx=args.ctx, dtype=np.float32)
-        if _GEN_RATING.USE_CLASSIFICATION:
-            nd_gt_label = mx.nd.array(np.searchsorted(possible_rating_values, gt_ratings),
-                                      ctx=args.ctx, dtype=np.int32)
 
         iter_graph = data_iter.train_graph
         ## remove the batch rating pair and link prediction pair (optional)
@@ -659,11 +640,8 @@ def train(seed):
                               symm=_GCN.AGG.NORM_SYMM)
             rating_loss_l = []
             for i in range(_MODEL.NBLOCKS):
-                if _GEN_RATING.USE_CLASSIFICATION:
-                    ele_loss = rating_loss_net(pred_ratings[i], nd_gt_label).mean()
-                else:
-                    ele_loss = rating_loss_net(mx.nd.reshape(pred_ratings[i], shape=(-1,)),
-                                               (nd_gt_ratings - rating_mean) / rating_std ).mean()
+                ele_loss = rating_loss_net(mx.nd.reshape(pred_ratings[i], shape=(-1,)),
+                                           (nd_gt_ratings - rating_mean) / rating_std ).mean()
 
                 rating_loss_l.append(ele_loss)
             loss = sum(rating_loss_l)
@@ -689,12 +667,7 @@ def train(seed):
             logging.info(gluon_net_info(net, save_path=os.path.join(args.save_dir, 'net%d.txt' % args.save_id)))
         # Calculate the avg losses
         for i in range(_MODEL.NBLOCKS):
-            if _GEN_RATING.USE_CLASSIFICATION:
-                real_pred_ratings = (mx.nd.softmax(pred_ratings[i], axis=1) *
-                                     nd_possible_rating_values.reshape((1, -1))).sum(axis=1)
-                rmse = mx.nd.square(real_pred_ratings - nd_gt_ratings).sum()
-            else:
-                rmse = mx.nd.square(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean
+            rmse = mx.nd.square(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean
                                     - nd_gt_ratings).sum()
             avg_rmse_l[i][0] += rmse.asscalar()
             avg_rmse_l[i][1] += pred_ratings[i].shape[0]

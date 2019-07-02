@@ -6,9 +6,9 @@ The MXNet implementation of [STAR-GCN: Stacked and Reconstructed Graph Convoluti
 ### Requirements
   * [MXNet](https://mxnet.incubator.apache.org/) 
     * Please [build from source](https://mxnet.incubator.apache.org/versions/master/install/ubuntu_setup.html#build-mxnet-from-source)
-    * Compile the customized kernel according to the [README](https://github.com/jennyzhang0215/STAR-GCN/blob/master/seg_ops_cuda/README.md)
+    * Compile the customized kernel according to the [README](https://github.com/jennyzhang0215/STAR-GCN/blob/master/seg_ops_cuda)
   * GraphSampler
-    * Compile the graphsampler API according to the [README](https://github.com/jennyzhang0215/STAR-GCN/blob/master/GraphSampler/README.md)
+    * Compile the graphsampler API according to the [README](https://github.com/jennyzhang0215/STAR-GCN/blob/master/GraphSampler)
   * [GluonNLP](https://gluon-nlp.mxnet.io/)
 ```bash
 pip install gluonnlp

@@ -62,13 +62,13 @@ class LoadData(object):
         self._root = os.path.join(DATASET_PATH)
         self._raw_data_urls = {'ml-100k': ['ml-100k.zip',
                                            'http://files.grouplens.org/datasets/movielens/ml-100k.zip',
-                                           '0e33842e24a9c977be4e0107933c0723'],
+                                           ''],
                                'ml-1m': ['ml-1m.zip',
                                          'http://files.grouplens.org/datasets/movielens/ml-1m.zip',
-                                         'c4d9eecfca2ab87c1945afe126590906'],
+                                         ''],
                                'ml-10m': ['ml-10m.zip',
                                           'http://files.grouplens.org/datasets/movielens/ml-10m.zip',
-                                          'ce571fd55effeba0271552578f2648bd']}
+                                          '']}
 
         assert name in self._raw_data_urls
 
@@ -327,7 +327,7 @@ class LoadData(object):
             warnings.warn(
                 'Unverified HTTPS request is being made (verify_ssl=False). '
                 'Adding certificate verification is strongly advised.')
-
+        print("fname: {} ".format(fname))
         if overwrite or not os.path.exists(fname) or (sha1_hash and not check_sha1(fname, sha1_hash)):
             dirname = os.path.dirname(os.path.abspath(os.path.expanduser(fname)))
             if not os.path.exists(dirname):

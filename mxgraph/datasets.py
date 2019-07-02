@@ -279,9 +279,10 @@ class LoadData(object):
             os.makedirs(self._root)
         data_name, url, data_hash = self._raw_data_urls[self._name]
         path = os.path.join(self._root, data_name)
-        if not os.path.exists(path) or force_download: #or not check_sha1(path, data_hash):
-            print("\n\n=====================> Download dataset")
+        if not os.path.exists(path) or force_download or (data_hash and not check_sha1(path, data_hash)):
+            print("\n\n=====================> Download dataset ...")
             self.download(url, path=path, sha1_hash=data_hash)
+            print("\n\n=====================> Unzip the file ...")
             with ZipFile(path, 'r') as zf:
                 zf.extractall(path=self._root)
 

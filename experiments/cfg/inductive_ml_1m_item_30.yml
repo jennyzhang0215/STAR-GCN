@@ -23,7 +23,7 @@ FEA:
   MID_MAP: 0
   UNITS: 0
 EMBED:
-  UNITS: 32
+  UNITS: 64
   MASK_PROP: 0.4
   P_ZERO: 1.0
 GCN:
@@ -33,7 +33,7 @@ GCN:
   AGG:
     NORM_SYMM: true
     UNITS: [250]
-    ACCUM: stack
+    ACCUM: sum
   OUT:
     UNITS: [75]
 GEN_RATING:

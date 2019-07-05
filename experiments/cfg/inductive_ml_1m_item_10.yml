@@ -33,7 +33,7 @@ GCN:
   AGG:
     NORM_SYMM: true
     UNITS: [250]
-    ACCUM: stack
+    ACCUM: sum
   OUT:
     UNITS: [75]
 GEN_RATING:

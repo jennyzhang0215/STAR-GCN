@@ -1,5 +1,5 @@
 # STAR-GCN
-The MXNet implementation of [STAR-GCN: Stacked and Reconstructed Graph Convolutional Networks for Recommender Systems](https://arxiv.org/pdf/1905.13129.pdf) in IJCAI 2019
+The MXNet implementation of [STAR-GCN: Stacked and Reconstructed Graph Convolutional Networks for Recommender Systems](https://www.ijcai.org/proceedings/2019/0592.pdf) in IJCAI 2019
 
 ## Prerequisite
 
@@ -42,7 +42,7 @@ Please cite our paper if you use this code in your own work:
 @article{zhang2019star,
   title={STAR-GCN: Stacked and Reconstructed Graph Convolutional Networks for Recommender Systems},
   author={Zhang, Jiani and Shi, Xingjian and Zhao, Shenglin and King, Irwin},
-  journal={arXiv preprint arXiv:1905.13129},
+  journal={The 28th International Joint Conference on Artificial Intelligence},
   year={2019}
 }
 ```

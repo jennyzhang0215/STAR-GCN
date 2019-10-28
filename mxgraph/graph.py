@@ -56,11 +56,9 @@ def npy_seg_sum(data, ind_ptr):
     """
     return _graph_sampler.seg_sum(data, ind_ptr)
 
-
 def take1d(data, sel):
     return _graph_sampler.take_1d_omp(np.ascontiguousarray(data),
                                       np.ascontiguousarray(sel, dtype=np.int32))
-
 
 def unordered_unique(data, return_counts=False, return_inverse=False):
     if return_counts:
@@ -68,7 +66,6 @@ def unordered_unique(data, return_counts=False, return_inverse=False):
     if return_inverse:
         return _graph_sampler.unique_inverse(np.ascontiguousarray(data).astype(np.int32))
     raise NotImplementedError
-
 
 def set_seed(seed):
     """Set the random seed of the inner sampling handler
@@ -101,7 +98,6 @@ def _gen_edge_row_indices_by_indptr(ind_ptr, nnz):
     """
     return _graph_sampler.gen_row_indices_by_indptr(ind_ptr.astype(np.int32), nnz)
 
-
 def _shallow_copy_stacked_dict(dic):
     new_dict = {}
     for k1 in dic:
@@ -109,7 +105,6 @@ def _shallow_copy_stacked_dict(dic):
         for k2 in dic[k1]:
             new_dict[k1][k2] = dic[k1][k2]
     return new_dict
-
 
 class NodeIDRMap(object):
     def __init__(self, node_ids):
@@ -123,7 +118,6 @@ class NodeIDRMap(object):
                             dtype=np.int32)
         else:
             return self._rmap[node_ids]
-
 
 class NodeIDRMapFast(object):
     def __init__(self, node_ids):
@@ -144,7 +138,6 @@ class NodeIDRMapFast(object):
 
     def __getitem__(self, node_ids):
         return self._rmap[node_ids - self._node_id_min]
-
 
 def merge_nodes(node_ids):
     """
@@ -169,7 +162,6 @@ def merge_nodes(node_ids):
             indices.append(all_indices[begin:(begin + ele.size)])
             begin += ele.size
         return uniq_node_ids, indices
-
 
 def merge_node_ids_dict(data):
     """
@@ -226,11 +218,8 @@ def merge_node_ids_dict(data):
         new_idx_dict_l.append(new_idx_dict)
     return uniq_node_ids_dict, new_idx_dict_l
 
-
 def empty_as_zero(l, dtype):
     return [ele.astype(dtype) if ele.size > 0 else np.zeros(shape=(1,), dtype=dtype) for ele in l]
-
-
 
 class NodeFeatures(object):
     """A simple wrapper for node features/states
@@ -269,11 +258,10 @@ class NodeFeatures(object):
         node_inds = mx.nd.array(self._node_id_rmap[sel_node_ids], dtype=np.int32, ctx=self._ctx)
         return NodeFeatures(mx.nd.take(self.data, node_inds, axis=0), sel_node_ids)
 
-
 class CSRMat(object):
     """A simple wrapper of the CSR Matrix. We can view it as a bipartite graph
 
-    Apart from the traditoinal CSR format, we use two additional arrays: row_ids and col_ids
+    Apart from the traditional CSR format, we use two additional arrays: row_ids and col_ids
      to track the original ids of the row/col indices
 
     We use the C++ API to accelerate the speed if possible

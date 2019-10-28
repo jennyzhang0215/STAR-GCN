@@ -39,10 +39,11 @@ python ../STAR_GCN.py --ctx gpu0 --cfg transductive_ml-100k.yml
 ## Cite
 Please cite our paper if you use this code in your own work:
 ```
-@article{zhang2019star,
+@inproceedings{zhang2019star,
   title={STAR-GCN: Stacked and Reconstructed Graph Convolutional Networks for Recommender Systems},
   author={Zhang, Jiani and Shi, Xingjian and Zhao, Shenglin and King, Irwin},
-  journal={The 28th International Joint Conference on Artificial Intelligence},
-  year={2019}
+  booktitle = {The 28th International Joint Conference on Artificial Intelligence},
+  pages     = {4264--4270},
+  year      = {2019}
 }
 ```

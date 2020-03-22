@@ -32,7 +32,7 @@ The training scripts are in the experiments directory. The chosen hyperparameter
 For example, to train the MovieLens-100k in the transductive setting, we can run 
 ```bash
 cd experiments/cfg
-python ../STAR_GCN.py --ctx gpu0 --cfg transductive_ml-100k.yml
+python ../STAR-GCN.py --ctx gpu0 --cfg transductive_ml-100k.yml
 ```
 
 

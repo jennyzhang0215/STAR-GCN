@@ -488,10 +488,15 @@ def evaluate(net, feature_dict, ctx, data_iter, segment='valid'):
                           graph_sampler_args=graph_sampler_args,
                           symm=_GCN.AGG.NORM_SYMM)
         for i in range(_MODEL.NBLOCKS):
+            print(mx.nd.clip(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean,
+                                            possible_rating_values.min(),
+                                            possible_rating_values.max()) )
+            print(nd_gt_ratings)
             rmse_l[i] +=\
                     mx.nd.square(mx.nd.clip(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean,
                                             possible_rating_values.min(),
                                             possible_rating_values.max()) - nd_gt_ratings).sum().asscalar()
+
     for i in range(_MODEL.NBLOCKS):
         rmse_l[i] = np.sqrt(rmse_l[i] / cnt)
     return rmse_l

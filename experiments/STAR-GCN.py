@@ -582,7 +582,7 @@ def train(seed):
 
     for iter_idx in range(1, _TRAIN.MAX_ITER):
         rating_node_pairs, gt_ratings = next(rating_sampler)
-        print("rating_node_pairs", rating_node_pairs)
+        #print("rating_node_pairs", rating_node_pairs)
         if _MODEL.USE_DAE:
             embed_noise_dict, recon_node_ids_dict, all_masked_node_ids_dict = next(recon_sampler)
         else:

@@ -165,9 +165,8 @@ def gen_pair_key(src_key, dst_key):
 
 
 class Net(nn.Block):
-    def __init__(self, all_graph, nratings, name_user, name_item, **kwargs):
+    def __init__(self, all_graph, name_user, name_item, **kwargs):
         super(Net, self).__init__(**kwargs)
-        self._nratings = nratings
         self._name_user = name_user
         self._name_item = name_item
         self._act = get_activation(_MODEL.ACTIVATION)
@@ -246,7 +245,6 @@ class Net(nn.Block):
                                                                 prefix='{}_l1_'.format(key)))
                         self.embed_maps.add(embed_map)
 
-            self.gen_ratings = InnerProductLayer(prefix='gen_rating')
 
             self.rating_user_projs = nn.Sequential(prefix='rating_user_proj_')
             self.rating_item_projs = nn.Sequential(prefix='rating_item_proj_')
@@ -259,6 +257,9 @@ class Net(nn.Block):
                             ele_proj.add(nn.Dense(units=_GEN_RATING.MID_MAP,
                                                   flatten=False))
                         rating_proj.add(ele_proj)
+
+            self.gen_ratings = InnerProductLayer(prefix='gen_rating')
+
 
     def get_embed(self, ctx, node_ids_dict, embed_noise_dict=None, use_mask=True):
         """ Generate the embedding of the nodes
@@ -403,8 +404,7 @@ class Net(nn.Block):
                                         use_mask=embed_noise_dict is not None)
         if _MODEL.USE_FEA_PROJ:
             fea_dict = self.get_feature(ctx=ctx,
-                                        node_ids_dict={key: mx.nd.array(req_node_ids, ctx=ctx, dtype=np.int32)
-                                                       for key, req_node_ids in req_node_ids_dict.items()},
+                                        node_ids_dict=req_node_ids_dict,
                                         feature_dict=feature_dict)
             if _MODEL.USE_EMBED:
                 for key in input_dict:
@@ -443,7 +443,7 @@ class Net(nn.Block):
                 # Generate the predicted embeddings
                 block_pred_embeddings = dict()
                 for key, idx in recon_idx_dict.items():
-                    block_pred_embeddings[key] =\
+                    block_pred_embeddings[key] = \
                         embed_map[key](mx.nd.take(output_dict[key], mx.nd.array(idx, ctx=ctx, dtype=np.int32)))
                 pred_embeddings.append(block_pred_embeddings)
             if block_id < _MODEL.NBLOCKS - 1 and _MODEL.USE_DAE:
@@ -465,10 +465,10 @@ class Net(nn.Block):
 def evaluate(net, feature_dict, ctx, data_iter, segment='valid'):
     rating_mean = data_iter._train_ratings.mean()
     rating_std = data_iter._train_ratings.std()
+
     rating_sampler = data_iter.rating_sampler(batch_size=_TRAIN.RATING_BATCH_SIZE, segment=segment,
                                               sequential=True)
     possible_rating_values = data_iter.possible_rating_values
-    nd_possible_rating_values = mx.nd.array(possible_rating_values, ctx=args.ctx, dtype=np.float32)
     eval_graph = data_iter.val_graph if segment == 'valid' else data_iter.test_graph
     graph_sampler_args = gen_graph_sampler_args(data_iter.all_graph.meta_graph)
     # Evaluate RMSE
@@ -527,7 +527,6 @@ def train(seed):
             other_key = dataset.name_item
         else:
             raise NotImplementedError
-        print("DataIterator")
         data_iter = DataIterator(all_graph=all_graph,
                                  name_user=dataset.name_user,
                                  name_item=dataset.name_item,
@@ -542,11 +541,9 @@ def train(seed):
                                  embed_p_self={inductive_key: 1.0-_EMBED.P_ZERO, other_key: 1.0},
                                  seed=seed)
     logging.info(data_iter)
+
     ### build the net
-    possible_rating_values = data_iter.possible_rating_values
-    print("Net ...")
-    net = Net(all_graph=all_graph, nratings=possible_rating_values.size,
-              name_user=dataset.name_user, name_item=dataset.name_item)
+    net = Net(all_graph=all_graph, name_user=dataset.name_user, name_item=dataset.name_item)
     net.initialize(init=mx.init.Xavier(factor_type='in'), ctx=args.ctx)
     net.hybridize()
     rating_loss_net = gluon.loss.L2Loss()
@@ -567,11 +564,8 @@ def train(seed):
                                     ['%d'] + ['%.4f'] * _MODEL.NBLOCKS,
                                     os.path.join(args.save_dir, 'test_loss%d.csv' % args.save_id))
     ### initialize the iterator
-    print("sampler ...")
     rating_sampler = data_iter.rating_sampler(batch_size=_TRAIN.RATING_BATCH_SIZE, segment='train')
-    print("recon_nodes_sampler ...")
     recon_sampler = data_iter.recon_nodes_sampler(batch_size=_TRAIN.RECON_BATCH_SIZE, segment='train')
-    print("gen_graph_sampler_args")
     graph_sampler_args = gen_graph_sampler_args(all_graph.meta_graph)
     rating_mean = data_iter._train_ratings.mean()
     rating_std = data_iter._train_ratings.std()
@@ -657,13 +651,12 @@ def train(seed):
             for i in range(_MODEL.NBLOCKS):
                 train_loss_info['rmse{}'.format(i)] = np.sqrt(avg_rmse_l[i][0] / avg_rmse_l[i][1])
                 train_loss_info['rating_loss{}'.format(i)] = avg_rating_loss_l[i][0] / avg_rating_loss_l[i][1]
-
                 train_loss_info['recon_loss{}'.format(i)] = avg_recon_loss_l[i][0] / avg_recon_loss_l[i][1] \
                     if _MODEL.USE_DAE else 0
             train_loss_logger.log(**train_loss_info)
 
-            logging_str = "Iter={}, gnorm={:.3f}, loss={:.3f}".format(iter_idx,
-                                                                      avg_gnorm / _TRAIN.LOG_INTERVAL, loss.asscalar())
+            logging_str = "Iter={}, gnorm={:.3f}, loss={:.3f}".format(
+                iter_idx, avg_gnorm / _TRAIN.LOG_INTERVAL, loss.asscalar())
             logging_str += log_str(avg_rating_loss_l, "RT")
             if _MODEL.USE_DAE:
                 logging_str += log_str(avg_recon_loss_l, "RC")

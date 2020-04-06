@@ -19,14 +19,11 @@ class BaseAggregator(nn.HybridBlock):
 
 
 class GCNAggregator(BaseAggregator):
-    def __init__(self, units, act=None,
-                 dropout_rate=0.0, input_dropout=True, use_layer_norm=False, **kwargs):
+    def __init__(self, units, act=None, dropout_rate=0.0, **kwargs):
         super(GCNAggregator, self).__init__(**kwargs)
         with self.name_scope():
             self._agg = MultiLinkGCNAggregator(units=units, num_links=1, act=act,
-                                               dropout_rate=dropout_rate,
-                                               input_dropout=input_dropout,
-                                               use_layer_norm=use_layer_norm)
+                                               dropout_rate=dropout_rate)
 
     @property
     def use_multi_link(self):
@@ -60,8 +57,7 @@ class GCNAggregator(BaseAggregator):
 
 class MultiLinkGCNAggregator(BaseAggregator):
     def __init__(self, units, num_links, act=None, dropout_rate=0.0,
-                 input_dropout=True, ordinal_sharing=True, use_layer_norm=False,
-                 accum='stack', **kwargs):
+                 ordinal_sharing=True, accum='stack', **kwargs):
         """
 
         Parameters
@@ -70,7 +66,6 @@ class MultiLinkGCNAggregator(BaseAggregator):
         num_links : int
         act : str
         dropout_rate : float
-        input_dropout : bool
         ordinal_sharing : bool
         accum : str
         kwargs : dict
@@ -78,17 +73,15 @@ class MultiLinkGCNAggregator(BaseAggregator):
         super(MultiLinkGCNAggregator, self).__init__(**kwargs)
         self._units = units
         self._num_links = num_links
-        self._use_layer_norm = use_layer_norm
         self._act = get_activation(act)
         self._ordinal_sharing = ordinal_sharing
         self._accum = accum
-        self._input_dropout = input_dropout
         if self._accum == 'stack':
             assert units % num_links == 0, 'units should be divisible by the num_links '
             self._units = self._units // num_links
         with self.name_scope():
-            if self._use_layer_norm:
-                self.layer_norm = nn.LayerNorm(epsilon=1E-3)
+            # if self._use_layer_norm:
+            #     self.layer_norm = nn.LayerNorm(epsilon=1E-3)
             self.dropout = nn.Dropout(dropout_rate)
             for i in range(num_links):
                 self.__setattr__('weight{}'.format(i),
@@ -135,8 +128,7 @@ class MultiLinkGCNAggregator(BaseAggregator):
             The output features
         """
         out_l = []
-        if self._input_dropout:
-            neighbor_data = self.dropout(neighbor_data)
+        neighbor_data = self.dropout(neighbor_data)
         weight, bias = kwargs['weight0'], kwargs['bias0']
         for i in range(self._num_links):
             if i > 0 and self._ordinal_sharing:
@@ -166,6 +158,6 @@ class MultiLinkGCNAggregator(BaseAggregator):
             else:
                 raise NotImplementedError
         out = self._act(out)
-        if self._use_layer_norm:
-            out = self.layer_norm(out)
+        # if self._use_layer_norm:
+        #     out = self.layer_norm(out)
         return out

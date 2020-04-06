@@ -40,12 +40,12 @@ class LayerDictionary(nn.Block):
 
 
 class HeterGCNLayer(nn.Block):
-    def __init__(self, meta_graph, multi_link_structure, agg_units, out_units, source_keys=None,
-                 dropout_rate=0.0,
-                 agg_ordinal_sharing=False, share_agg_weights=False,
+    def __init__(self, meta_graph, multi_link_structure, agg_units, out_units,
+                 source_keys=None, dropout_rate=0.0,
+                 agg_ordinal_sharing=False,
                  agg_accum='stack', agg_act='relu',
-                 layer_accum='stack', accum_self=False, share_out_fc_weights=False, out_act=None,
-                 layer_norm=False, prefix=None, params=None):
+                 layer_accum='stack', accum_self=False, out_act=None,
+                 prefix=None, params=None):
         """
 
         Parameters
@@ -70,13 +70,7 @@ class HeterGCNLayer(nn.Block):
             Can be 'stack' or 'sum'
         accum_self : bool
             Whether to accumulate the features of yourself
-        share_agg_weights : bool
-            Whether to share the weights of a pair of aggregators
-        share_fc_weights : bool
-            Whether to share the weights of different output FC layers
         out_act : None or nn.Activation or str
-        layer_norm : bool
-            Whether to use layer normalization
         prefix : str
         params : None
         """
@@ -92,9 +86,6 @@ class HeterGCNLayer(nn.Block):
 
         self._layer_accum = layer_accum
         self._accum_self = accum_self
-        self._share_agg_weights = share_agg_weights
-        self._share_out_fc_weights = share_out_fc_weights
-        self._use_layer_norm = layer_norm
         self._out_act = get_activation(out_act)
         with self.name_scope():
             self.dropout = nn.Dropout(dropout_rate) ### dropout before feeding the out layer
@@ -103,27 +94,11 @@ class HeterGCNLayer(nn.Block):
             with self._aggregators.name_scope():
                 for src_key in source_keys:
                     for dst_key in meta_graph[src_key]:
-                        if not self._share_agg_weights or (dst_key, src_key) not in self._aggregators:
-                            shared_params = None
-                        else:
-                            if agg_units[src_key] != agg_units[dst_key]:
-                                warnings.warn('Cannot share parameters between {}-->{} and {}-->{}. '
-                                              'The agg units are different, src={}:{}, dst={}:{}'
-                                              .format(src_key, dst_key, dst_key, src_key,
-                                                      src_key, agg_units[src_key], dst_key,
-                                                      agg_units[dst_key]))
-                                shared_params = None
-                            elif (dst_key, src_key) in self._aggregators and self._share_agg_weights:
-                                shared_params = self._aggregators[(dst_key, src_key)].params
-                            else:
-                                shared_params = None
                         if multi_link_structure[(src_key, dst_key)] is None:
                             self._aggregators[(src_key, dst_key)] =\
                                     GCNAggregator(units=agg_units[src_key],
                                                   act=agg_act,
                                                   dropout_rate=dropout_rate,
-                                                  use_layer_norm=False,
-                                                  params=shared_params,
                                                   prefix='{}_{}_'.format(src_key, dst_key))
                         else:
                             self._aggregators[(src_key, dst_key)] =\
@@ -132,37 +107,25 @@ class HeterGCNLayer(nn.Block):
                                         num_links=multi_link_structure[(src_key, dst_key)],
                                         act=agg_act,
                                         dropout_rate=dropout_rate,
-                                        use_layer_norm=False,
                                         ordinal_sharing=agg_ordinal_sharing,
                                         accum=agg_accum,
-                                        params=shared_params,
                                         prefix='{}_{}_'.format(src_key, dst_key))
 
 
             # Build the output FC layers
             self._out_fcs = LayerDictionary(prefix='out_fc_')
             with self._out_fcs.name_scope():
-                shared_params = None
-                if self._share_out_fc_weights:
-                    all_units = list(out_units.values())
-                    for ele_units in all_units:
-                        assert ele_units == all_units[0],\
-                            'Cannot share the weights of FC layerrs when the output units ' \
-                            'are different, units={}'.format(out_units)
                 for key, ele_units in out_units.items():
                     if ele_units is not None:
                         self._out_fcs[key] = nn.Dense(ele_units, flatten=False,
-                                                      params=shared_params,
                                                       prefix='{}_'.format(key))
-                        if shared_params is None and self._share_out_fc_weights:
-                            shared_params = self._out_fcs[key].params
 
             # Build the layer norm layers
-            if self._use_layer_norm:
-                self._layer_norms = LayerDictionary(prefix='layer_norm_')
-                with self._layer_norms.name_scope():
-                    for key in source_keys:
-                        self._layer_norms[key] = nn.LayerNorm(prefix='{}_'.format(key))
+            # if self._use_layer_norm:
+            #     self._layer_norms = LayerDictionary(prefix='layer_norm_')
+            #     with self._layer_norms.name_scope():
+            #         for key in source_keys:
+            #             self._layer_norms[key] = nn.LayerNorm(prefix='{}_'.format(key))
 
             if self._accum_self:
                 self._self_fcs = LayerDictionary(prefix='self_fc_')
@@ -219,8 +182,8 @@ class HeterGCNLayer(nn.Block):
                 raise NotImplementedError
         out = self._out_fcs[key](out)
         out = self._out_act(out)
-        if self._use_layer_norm:
-            out = self._layer_norms[key](out)
+        # if self._use_layer_norm:
+        #     out = self._layer_norms[key](out)
         return out
 
     def forward(self, base_feas, neighbor_data):

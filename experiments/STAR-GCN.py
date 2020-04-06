@@ -488,10 +488,6 @@ def evaluate(net, feature_dict, ctx, data_iter, segment='valid'):
                           graph_sampler_args=graph_sampler_args,
                           symm=_GCN.AGG.NORM_SYMM)
         for i in range(_MODEL.NBLOCKS):
-            print(mx.nd.clip(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean,
-                                            possible_rating_values.min(),
-                                            possible_rating_values.max()) )
-            print(nd_gt_ratings)
             rmse_l[i] +=\
                     mx.nd.square(mx.nd.clip(pred_ratings[i].reshape((-1,)) * rating_std + rating_mean,
                                             possible_rating_values.min(),
@@ -586,7 +582,7 @@ def train(seed):
 
     for iter_idx in range(1, _TRAIN.MAX_ITER):
         rating_node_pairs, gt_ratings = next(rating_sampler)
-
+        print("rating_node_pairs", rating_node_pairs)
         if _MODEL.USE_DAE:
             embed_noise_dict, recon_node_ids_dict, all_masked_node_ids_dict = next(recon_sampler)
         else:

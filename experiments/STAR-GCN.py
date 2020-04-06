@@ -630,7 +630,8 @@ def train(seed):
         gnorm = params_clip_global_norm(net.collect_params(), _TRAIN.GRAD_CLIP, args.ctx)
         avg_gnorm += gnorm
         for k,v in net.collect_params().items():
-            print(k, v.data)
+            print(k, v.data())
+            ch=input()
         trainer.step(1.0)
 
         if iter_idx == 1:

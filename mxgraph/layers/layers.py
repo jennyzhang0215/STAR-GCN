@@ -317,6 +317,7 @@ class StackedHeterGCNLayers(nn.Sequential):
                     node_ids_l.append(all_src_ids_dict[key])
                 uniq_node_ids, node_inds_l = merge_nodes(node_ids_l)
                 print(key, uniq_node_ids, node_inds_l)
+                ch = input()
                 prev_level_ids_dict[key] = uniq_node_ids
                 curr = 0
                 if key in all_neighbor_ids_dict:

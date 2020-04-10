@@ -285,6 +285,7 @@ class StackedHeterGCNLayers(nn.Sequential):
             all_src_ids_dict = dict()
             for src_key, sel_node_ids in sel_node_ids_dict.items():
                 print(src_key, sel_node_ids)
+                ch = input()
                 if depth == len(self) - 1:
                     uniq_sel_node_ids, sel_node_idx = unordered_unique(sel_node_ids, return_inverse=True)
                 else:
@@ -298,6 +299,8 @@ class StackedHeterGCNLayers(nn.Sequential):
                                                                  symm=symm,
                                                                  use_multi_link=use_multi_link,
                                                                  num_neighbors=graph_sampler_args[(src_key, dst_key)])
+                    print(end_points_ids, edge_values, ind_ptr, support)
+                    ch = input()
                     # The aggregation parameters should be [end_points, edge_values ind_ptr, support]
                     #    the previous two will be filled later.
                     agg_args_dict[src_key][2][dst_key] = [None, edge_values, ind_ptr, support]

@@ -207,8 +207,6 @@ class HeterGCNLayer(nn.Block):
             out[key] = self.forward_single(key, ele_feas, neighbor_data[key])
         return out
 
-
-
 class InnerProductLayer(nn.HybridBlock):
     def __init__(self, mid_units=None, **kwargs):
         super(InnerProductLayer, self).__init__(**kwargs)
@@ -222,7 +220,6 @@ class InnerProductLayer(nn.HybridBlock):
             data2 = self._mid_map(data2)
         score = F.sum(data1 * data2, axis=1, keepdims=True)
         return score
-
 
 class StackedHeterGCNLayers(nn.Sequential):
     """Stack multiple HeterGCNLayers
@@ -287,6 +284,7 @@ class StackedHeterGCNLayers(nn.Sequential):
             all_neighbor_ids_dict = dict()
             all_src_ids_dict = dict()
             for src_key, sel_node_ids in sel_node_ids_dict.items():
+                print(src_key, sel_node_ids)
                 if depth == len(self) - 1:
                     uniq_sel_node_ids, sel_node_idx = unordered_unique(sel_node_ids, return_inverse=True)
                 else:

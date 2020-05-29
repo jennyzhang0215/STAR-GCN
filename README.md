@@ -4,7 +4,7 @@ The MXNet implementation of [STAR-GCN: Stacked and Reconstructed Graph Convoluti
 ## Prerequisite
 
 ### Requirements
-  * [MXNet](https://mxnet.incubator.apache.org/) Version 1.5.0
+  * [MXNet](https://mxnet.incubator.apache.org/) [Version 1.5.0](https://www.apache.org/dyn/closer.cgi/incubator/mxnet/1.5.1/apache-mxnet-src-1.5.1-incubating.tar.gz) 
     * Please [build from source](https://mxnet.incubator.apache.org/versions/master/install/ubuntu_setup.html#build-mxnet-from-source)
     * Compile the customized segment operator kernel according to [README](https://github.com/jennyzhang0215/STAR-GCN/blob/master/seg_ops_cuda)
   * GraphSampler
